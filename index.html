@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Exercise: Arrange the words</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#667085;--bd:#d9deea;--pr:#3b5bdb;--prt:#fff;--chip:#eef2ff;--ok:#12803c;--okb:#e6f6ec;--no:#c0392b;--nob:#fdecea;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1b2030;--tx:#e8ecf5;--mu:#9aa4b8;--bd:#2c3347;--pr:#7c93ff;--prt:#0f1320;--chip:#262d45;--ok:#5ad08a;--okb:#16301f;--no:#ff8a7a;--nob:#3a1d1a}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1b2030;--tx:#e8ecf5;--mu:#9aa4b8;--bd:#2c3347;--pr:#7c93ff;--prt:#0f1320;--chip:#262d45;--ok:#5ad08a;--okb:#16301f;--no:#ff8a7a;--nob:#3a1d1a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 14px 60px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--mu);margin:0 0 14px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.score{margin-left:auto;font-weight:600}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--pr);color:var(--prt);border:0;border-radius:10px;padding:8px 14px;font-weight:600}
+.btn.alt{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
+.card.ok{border-color:var(--ok)}.card.no{border-color:var(--no)}
+.q{font-weight:600;margin-bottom:8px}
+.nm{width:100%;max-width:360px;padding:9px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit;margin:0 0 6px}
+.ans{min-height:50px;border:2px dashed var(--bd);border-radius:10px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ans:empty::before{content:"Bấm vào các từ bên dưới để xếp câu…";color:var(--mu);font-size:.9rem}
+.bank{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;min-height:40px}
+.chip{background:var(--chip);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 11px}
+.chip:hover{border-color:var(--pr)}
+.ans .chip{background:var(--pr);color:var(--prt);border-color:var(--pr)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fb{font-size:.95rem;font-weight:600}
+.ok .fb{color:var(--ok)}.no .fb{color:var(--no)}
+.sol{font-weight:400;color:var(--tx)}
+</style>
+</head>
+<body>
+<main>
+<h1>Exercise: Arrange the words</h1>
+<p class="sub">Sắp xếp các từ/cụm từ thành câu hoàn chỉnh. Bấm vào từ để đưa lên khung trả lời; bấm lại để bỏ xuống. Bạn chỉ làm một lần: bấm <b>Nộp bài</b> để xem kết quả, đáp án sẽ hiện ở cuối trang.</p>
+<label for="name" style="font-weight:600">Họ và tên</label><br>
+<input id="name" class="nm" type="text" placeholder="Nhập tên của bạn…" autocomplete="name">
+<div class="bar">
+<button class="btn" id="submit">Nộp bài</button>
+<span class="score" id="score"></span>
+</div>
+<div id="list"></div>
+<div id="result"></div>
+</main>
+<script>
+const data=[
+{w:["usually","I","at 6:30 a.m.","get up"],a:["I usually get up at 6:30 a.m."]},
+{w:["breakfast","every morning","she","has"],a:["She has breakfast every morning.","Every morning she has breakfast."]},
+{w:["to school","by bus","he","goes"],a:["He goes to school by bus."]},
+{w:["my teeth","I","twice a day","brush"],a:["I brush my teeth twice a day.","Twice a day I brush my teeth."]},
+{w:["watches","in the evening","TV","my father"],a:["My father watches TV in the evening.","In the evening my father watches TV."]},
+{w:["do","what time","you","go to bed","usually","?"],a:["What time do you usually go to bed?"]},
+{w:["her homework","after school","does","Linda"],a:["Linda does her homework after school.","After school Linda does her homework."]},
+{w:["never","late","for work","is","my mother"],a:["My mother is never late for work."]},
+{w:["lunch","we","at the school canteen","have"],a:["We have lunch at the school canteen.","At the school canteen we have lunch."]},
+{w:["takes","a shower","before breakfast","he"],a:["He takes a shower before breakfast.","Before breakfast he takes a shower."]}
+];
+const esc=t=>t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const norm=s=>s.toLowerCase().replace(/\s+/g," ").replace(/\s*[.?!]+$/,"").trim();
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let st=[],submitted=false;
+function init(){
+ st=data.map((d,i)=>({bank:shuffle(d.w.map((_,k)=>k)),ans:[],done:null}));
+ render();
+}
+function render(){
+ const list=document.getElementById("list");list.innerHTML="";
+ data.forEach((d,i)=>{
+  const s=st[i];
+  const c=document.createElement("div");
+  c.className="card"+(s.done===true?" ok":s.done===false?" no":"");
+  c.innerHTML=`<div class="q">${i+1}.</div><div class="ans"></div><div class="bank"></div><div class="row"><button class="btn alt clr">Xóa</button><span class="fb"></span></div>`;
+  const ans=c.querySelector(".ans"),bank=c.querySelector(".bank"),fb=c.querySelector(".fb");
+  const mk=(k,from,to)=>{const b=document.createElement("button");b.className="chip";b.textContent=d.w[k];
+   b.disabled=submitted;b.onclick=()=>{from.splice(from.indexOf(k),1);to.push(k);render()};return b};
+  s.ans.forEach(k=>ans.appendChild(mk(k,s.ans,s.bank)));
+  s.bank.forEach(k=>bank.appendChild(mk(k,s.bank,s.ans)));
+  const clr=c.querySelector(".clr");
+  if(submitted)clr.style.display="none";
+  clr.onclick=()=>{s.bank=shuffle(s.bank.concat(s.ans));s.ans=[];render()};
+  if(s.done===true)fb.textContent="✓ Đúng";
+  if(s.done===false)fb.textContent="✗ Sai";
+  list.appendChild(c);
+ });
+ const ok=st.filter(s=>s.done===true).length,filled=st.filter(s=>s.ans.length===data.length*0+0||s.ans.length>0).length;
+ document.getElementById("score").textContent=submitted?`Điểm: ${ok}/${data.length}`:`Đã làm: ${filled}/${data.length}`;
+ const r=document.getElementById("result");
+ if(submitted){
+  r.innerHTML=`<div class="card"><div class="q">Kết quả của ${esc(document.getElementById("name").value.trim())}: ${ok}/${data.length} câu đúng</div></div>`+data.map((d,i)=>{const s=st[i],u=s.ans.map(k=>d.w[k]).join(" ")||"(chưa làm)";return `<div class="card ${s.done?'ok':'no'}"><div class="q">${i+1}. ${s.done?'✓ Đúng':'✗ Sai'}</div><div>Bài làm: ${esc(u)}</div><div>Đáp án: <b>${esc(d.a.join(" / "))}</b></div></div>`}).join("");
+ }else r.innerHTML="";
+}
+function check(i){
+ const s=st[i];
+ if(s.ans.length!==data[i].w.length){s.done=false;return}
+ const u=norm(s.ans.map(k=>data[i].w[k]).join(" "));
+ s.done=data[i].a.some(a=>norm(a)===u);
+}
+document.getElementById("submit").onclick=e=>{
+ if(submitted)return;
+ const nmEl=document.getElementById("name");
+ if(!nmEl.value.trim()){alert("Vui lòng nhập họ và tên trước khi nộp bài.");nmEl.focus();return}
+ nmEl.disabled=true;
+ const todo=st.filter((s,i)=>s.ans.length!==data[i].w.length).length;
+ if(todo&&!confirm(`Còn ${todo} câu chưa hoàn thành. Bạn vẫn muốn nộp bài?`))return;
+ data.forEach((_,i)=>check(i));
+ submitted=true;
+ e.target.disabled=true;e.target.textContent="Đã nộp bài";
+ render();
+ window.scrollTo({top:0,behavior:"smooth"});
+};
+init();
+</script>
+</body>
+</html>
